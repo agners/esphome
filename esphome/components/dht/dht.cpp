@@ -138,7 +138,7 @@ bool HOT ICACHE_RAM_ATTR DHT::read_sensor_(float *temperature, float *humidity, 
       if (i < 0)
         continue;
 
-      if (end_time - start_time >= 40) {
+      if (end_time - start_time >= 50) {
         data[byte] |= 1 << bit;
       }
       if (bit == 0) {
