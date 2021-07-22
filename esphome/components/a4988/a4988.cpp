@@ -21,7 +21,7 @@ void A4988::setup() {
 void A4988::dump_config() {
   ESP_LOGCONFIG(TAG, "A4988:");
   LOG_PIN("  Step Pin: ", this->step_pin_);
-  LOG_PIN("  Dir Pin: ", this->dir_pin_);
+  LOG_PIN("  Dir Pin: ",    this->dir_pin_);
   LOG_PIN("  Sleep Pin: ", this->sleep_pin_);
   LOG_STEPPER(this);
 }
