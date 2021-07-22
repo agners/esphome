@@ -48,10 +48,12 @@ jobs:
 
       - name: Run clang-format
         run: script/clang-format -i
+        continue-on-error: true
         if: ${{ matrix.id == 'clang-format' }}
 
       - name: Run clang-tidy
         run: script/clang-tidy --all-headers --fix --split-num 4 --split-at ${{ matrix.split }}
+        continue-on-error: true
         if: ${{ matrix.id == 'clang-tidy' }}
 
       - name: Suggest changes
