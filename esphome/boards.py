@@ -872,4 +872,5 @@ ESP32_C3_BASE_PINS = {
 ESP32_C3_BOARD_PINS = {
     "esp32-c3-devkitm-1": {"LED": 8},
     "esp32-c3-devkitc-02": "esp32-c3-devkitm-1",
+    "esp32-c3-32s-kit": {},
 }

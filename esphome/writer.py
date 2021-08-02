@@ -225,6 +225,23 @@ eeprom,   data, 0x99,    0x390000, 0x001000,
 spiffs,   data, spiffs,  0x391000, 0x00F000
 """
 
+ESP32_SMALL_PARTITIONS_CSV = """\
+nvs,      data, nvs,     0x009000, 0x005000,
+otadata,  data, ota,     0x00e000, 0x002000,
+app0,     app,  ota_0,   0x010000, 0x0F0000,
+app1,     app,  ota_1,   0x100000, 0x0F0000,
+eeprom,   data, 0x99,    0x1F0000, 0x001000,
+spiffs,   data, spiffs,  0x1F1000, 0x00F000
+"""
+
+ESP32_SMALL_PARTITIONS_CSV_NO_OTA = """\
+nvs,      data, nvs,     0x009000, 0x005000,
+otadata,  data, ota,     0x00e000, 0x002000,
+app0,     app,  ota_0,   0x010000, 0x1C0000,
+eeprom,   data, 0x99,    0x1D0000, 0x001000,
+spiffs,   data, spiffs,  0x1D1000, 0x00F000
+"""
+
 
 def get_ini_content():
     overrides = CORE.config[CONF_ESPHOME].get(CONF_PLATFORMIO_OPTIONS, {})
@@ -244,7 +261,7 @@ def get_ini_content():
     if CORE.is_esp32:
         data["board_build.partitions"] = "partitions.csv"
         partitions_csv = CORE.relative_build_path("partitions.csv")
-        write_file_if_changed(partitions_csv, ESP32_LARGE_PARTITIONS_CSV)
+        write_file_if_changed(partitions_csv, ESP32_SMALL_PARTITIONS_CSV)
 
     # pylint: disable=unsubscriptable-object
     if CONF_BOARD_FLASH_MODE in CORE.config[CONF_ESPHOME]:
