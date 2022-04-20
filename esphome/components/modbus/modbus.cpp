@@ -18,6 +18,10 @@ void Modbus::loop() {
   if (now - this->last_modbus_byte_ > 50) {
     this->rx_buffer_.clear();
     this->last_modbus_byte_ = now;
+    //ESP_LOGV(TAG, "Modbus GAP detected, clearing...");
+    for (auto *device : this->devices_) {
+      device->clear_response_expected();
+    }
   }
   // stop blocking new send commands after send_wait_time_ ms regardless if a response has been received since then
   if (now - this->last_send_ > send_wait_time_) {
@@ -55,23 +59,40 @@ bool Modbus::parse_modbus_byte_(uint8_t byte) {
   size_t at = this->rx_buffer_.size();
   this->rx_buffer_.push_back(byte);
   const uint8_t *raw = &this->rx_buffer_[0];
-  ESP_LOGV(TAG, "Modbus received Byte  %d (0X%x)", byte, byte);
-  // Byte 0: modbus address (match all)
-  if (at == 0)
-    return true;
-  uint8_t address = raw[0];
-  uint8_t function_code = raw[1];
-  // Byte 2: Size (with modbus rtu function code 4/3)
-  // See also https://en.wikipedia.org/wiki/Modbus
-  if (at == 2)
+  //ESP_LOGV(TAG, "Modbus received Byte  %d (0X%x) at %d", byte, byte, at);
+
+  /* No Modbus message is below 7 bytes, so don't parse any */
+  if (at < 7)
     return true;
 
-  uint8_t data_len = raw[2];
-  uint8_t data_offset = 3;
+  uint8_t address = raw[0];
+  uint8_t function_code = raw[1];
+
+  ModbusDevice *device;
+  for (auto *d : this->devices_) {
+    if (d->address_ == address) {
+      device = d;
+    }
+  }
+
+  uint8_t data_len;
+  uint8_t data_offset;
   // the response for write command mirrors the requests and data startes at offset 2 instead of 3 for read commands
   if (function_code == 0x5 || function_code == 0x06 || function_code == 0xF || function_code == 0x10) {
     data_offset = 2;
     data_len = 4;
+  }
+  else
+  {
+    if (device->is_response_expected()) {
+      // Byte 2: Size (with modbus rtu function code 4/3)
+      // See also https://en.wikipedia.org/wiki/Modbus
+      data_len = raw[2];
+      data_offset = 3;
+    } else {
+      data_len = 4;
+      data_offset = 2;
+    }
   }
 
   // Error ( msb indicates error )
@@ -96,7 +117,7 @@ bool Modbus::parse_modbus_byte_(uint8_t byte) {
     ESP_LOGW(TAG, "Modbus CRC Check failed! %02X!=%02X", computed_crc, remote_crc);
     return false;
   }
-  std::vector<uint8_t> data(this->rx_buffer_.begin() + data_offset, this->rx_buffer_.begin() + data_offset + data_len);
+  std::vector<uint8_t> data(this->rx_buffer_.begin(), this->rx_buffer_.begin() + data_offset + data_len);
   bool found = false;
   for (auto *device : this->devices_) {
     if (device->address_ == address) {

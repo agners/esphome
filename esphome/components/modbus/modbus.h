@@ -55,12 +55,15 @@ class ModbusDevice {
   void send_raw(const std::vector<uint8_t> &payload) { this->parent_->send_raw(payload); }
   // If more than one device is connected block sending a new command before a response is received
   bool waiting_for_response() { return parent_->waiting_for_response != 0; }
+  virtual bool is_response_expected() = 0;
+  void clear_response_expected() { this->request_received = false; }
 
  protected:
   friend Modbus;
 
   Modbus *parent_;
   uint8_t address_;
+  bool request_received = false;
 };
 
 }  // namespace modbus
